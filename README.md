@@ -1,13 +1,13 @@
-# calc-rs 🧮  
+# shuntcalc 🧮  
 > A smart terminal calculator with variables, step-by-step RPN evaluation, and Shunting Yard algorithm — all in pure Rust.
 
-[![Crates.io](https://img.shields.io/crates/v/calc-rs?style=flat-square)](https://crates.io/crates/calc-rs)
+[![Crates.io](https://img.shields.io/crates/v/shuntcalc?style=flat-square)](https://crates.io/crates/shuntcalc)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
-![calc-rs demo](demo.gif)
+![shuntcalc demo](demo.gif)
 
 Ever wondered how `(8 - 3) * 5` becomes `25` inside a calculator?  
-**calc-rs shows you every step** — while supporting variables, error recovery, and an interactive REPL.
+**shuntcalc shows you every step** — while supporting variables, error recovery, and an interactive REPL.
 
 Built with ❤️ in Rust. Zero unsafe code. Zero bloat.
 
@@ -29,13 +29,13 @@ Built with ❤️ in Rust. Zero unsafe code. Zero bloat.
 
 ### From Crates.io (recommended)
 ```bash
-$ cargo install calc-rs
+$ cargo install shuntcalc
 ```
 
 ### From source
 ```bash
-$ git clone https://github.com/yourusername/calc-rs
-$ cd calc-rs
+$ git clone https://github.com/yourusername/shuntcalc
+$ cd shuntcalc
 $ cargo install --path .
 ```
 💡 Make sure you have Rust installed.
@@ -87,7 +87,7 @@ Shunting Yard: 5 1 + 1 - (
 
 ## 🌟 Why This Project? 
 Most calculators hide the magic.
-calc-rs reveals it. 
+shuntcalc reveals it. 
 
 It’s not just a tool — it’s a teaching aid for: 
 
