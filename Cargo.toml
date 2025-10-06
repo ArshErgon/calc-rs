@@ -1,11 +1,11 @@
 [package]
-name = "calc-rs"
+name = "shuntcalc"
 version = "2.0.0"
 edition = "2021"
 authors = ["arshergon", "arshergon@gmail.com"]
 description = "A smart CLI calculator with variables, REPL, and step-by-step RPN evaluation using the Shunting Yard algorithm"
 license = "MIT"
-repository = "https://github.com/ArshErgon/calc-rs"
+repository = "https://github.com/ArshErgon/shuntcalc"
 readme = "README.md"
 keywords = ["cli", "calculator", "math", "rust", "rpn"]
 categories = ["command-line-utilities"]
