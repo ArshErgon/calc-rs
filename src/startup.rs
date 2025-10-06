@@ -41,6 +41,7 @@ r"░░██████ ░░████████ █████       
 }
 
 // Color helper (works in most terminals)
+#[allow(dead_code)]
 #[derive(Clone, Copy)]
 enum Color {
     Red,
