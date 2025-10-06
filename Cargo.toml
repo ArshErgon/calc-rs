@@ -1,6 +1,6 @@
 [package]
-name = "cli_display_cal"
-version = "0.1.0"
+name = "calc-rs"
+version = "2.0.0"
 edition = "2021"
 authors = ["arshergon", "arshergon@gmail.com"]
 
@@ -8,3 +8,5 @@ authors = ["arshergon", "arshergon@gmail.com"]
 
 [dependencies]
 clearscreen = "2.0.0"
+colored = "3.0.0"
+rustyline = "17.0.2"

@@ -1,114 +1,147 @@
+use colored::*;
 use std::collections::HashMap;
 
-pub fn reverse_polish_notation(number_vector: Vec<&str>) {
-    let mut stack: Vec<String> = Vec::new();
-    let mut steps: i32 = 0;
-    let mut operator_map: HashMap<String, String> = HashMap::new();
-    operator_map.insert("+".to_string(), "Perform addition".to_string());
-    operator_map.insert("-".to_string(), "Perform substraction".to_string());
-    operator_map.insert("*".to_string(), "Perform multiplication".to_string());
-    operator_map.insert("/".to_string(), "Perform division".to_string());
 
-    println!("\tWay to solve\n");
-    for elements in number_vector {
-        match elements {
+/// Shunting Yard Algorithm: Converts infix expression to RPN (postfix)
+
+pub fn shunting_yard_algorithm(tokens: Vec<String>) -> (Vec<String>, String) {
+    let mut output: Vec<String> = Vec::new();
+    let mut stack: Vec<String> = Vec::new(); // <-- changed from Vec<&str> to Vec<String>
+
+    // Operator precedence
+    let precedence: HashMap<&str, u8> = HashMap::from([("+", 1), ("-", 1), ("*", 2), ("/", 2)]);
+
+    for token in tokens {
+        match token.as_str() {
             "+" | "-" | "*" | "/" => {
-                let (num_one, num_two) = (stack.pop().unwrap(), stack.pop().unwrap());
-                let num_one: i128 = num_one.parse().expect("num one failed");
-                let num_two: i128 = num_two.parse().expect("num two failed");
-
-                match elements {
-                    "+" => {
-                        // let sum = (num_one.parse::<i32>().unwrap() + num_two.parse::<i32>().unwrap()).to_string().clone();
-                        let running_sum = (num_two + num_one).to_string();
-                        steps += 1;
-                        let msg = format!(
-                            "Step: {steps} -> {0} \n {num_two} {elements} {num_one} = {running_sum}\n",
-                            operator_map["+"]
-                        );
-                        stack.push(running_sum);
-                        println!("{msg}");
+                while let Some(op) = stack.last() {
+                    if op != "(" && precedence[op.as_str()] >= precedence[token.as_str()] {
+                        output.push(stack.pop().unwrap());
+                    } else {
+                        break;
                     }
-
-                    "-" => {
-                        let running_sum = (num_two - num_one).to_string();
-                        steps += 1;
-                        let msg = format!(
-                            "Step: {steps} -> {0} \n {num_two} {elements} {num_one} = {running_sum}\n",
-                            operator_map["-"]
-                        );
-                        stack.push(running_sum);
-                        println!("{msg}");
+                }
+                stack.push(token);
+            }
+            "(" => stack.push(token),
+            ")" => {
+                while let Some(op) = stack.pop() {
+                    if op == "(" {
+                        break;
                     }
-
-                    "*" => {
-                        let running_sum = (num_two * num_one).to_string();
-                        steps += 1;
-                        let msg = format!(
-                            "Step: {steps} -> {0} \n {num_two} {elements} {num_one} = {running_sum}\n",
-                            operator_map["*"]
-                        );
-                        stack.push(running_sum);
-                        println!("{msg}");
-                    }
-
-                    "/" => {
-                        if num_two == 0 {
-                            println!("Can't divied by zero");
-                            break;
-                        } else {
-                            let running_sum = (num_one / num_two).to_string();
-                            steps += 1;
-                            let msg = format!(
-                            "Step: {steps} -> {0} \n {num_two} {elements} {num_one} = {running_sum}\n"
-                            , operator_map["/"]);
-                            stack.push(running_sum);
-                            println!("{msg}");
-                        }
-                    }
-
-                    &_ => continue,
+                    output.push(op);
                 }
             }
-            &_ => stack.push(elements.to_string()),
+            _ => output.push(token), // numbers/operands
         }
     }
-    if stack.len() > 0 {
-        println!("Final Answer: {}", stack[0]);
-    } else {
-        println!("Process failed or 0 answer");
+
+    // Pop remaining operators
+    while let Some(op) = stack.pop() {
+        output.push(op);
     }
+
+    let rpn_string = output.join(" ");
+    (output, rpn_string)
 }
 
-pub fn shunting_yard_algorithm(args: Vec<&str>) -> (Vec<&str>, String) {
-    let mut stack = Vec::new();
-    let mut queue = Vec::new();
+/// Reverse Polish Notation evaluator with colorful step-by-step output
 
-    // loop in args, which is the cli input
-    // loop it last
-    // if some a match
-    // push the operator in the stack
-    // if found an opening bracket
-    // pop every operator from the stack and add it to the queue
-    for element in args {
-        match element {
-            "+" | "-" | "/" | "*" => stack.push(element),
-            "(" => continue,
-            ")" => {
-                while stack.len() > 0 {
-                    queue.push(stack.pop().unwrap())
+/// Reverse Polish Notation evaluator with colorful step-by-step output
+pub fn reverse_polish_notation(rpn_tokens: Vec<String>) {
+    let mut stack: Vec<i128> = Vec::new();
+    let mut step: usize = 1;
+
+    // Step 1: Show RPN conversion
+    println!("\n{}", "Step 1: Convert to RPN →".cyan().bold());
+    println!("  {}\n", rpn_tokens.join(" ").yellow());
+
+    for token in rpn_tokens {
+        match token.as_str() {
+            "+" | "-" | "*" | "/" => {
+                if stack.len() < 2 {
+                    println!("{}", "❌ Error: Not enough operands".red().bold());
+                    return;
                 }
+
+                let b = stack.pop().unwrap();
+                let a = stack.pop().unwrap();
+
+                let result = match token.as_str() {
+                    "+" => a + b,
+                    "-" => a - b,
+                    "*" => a * b,
+                    "/" => {
+                        if b == 0 {
+                            println!("{}", "❌ Error: Division by zero".red().bold());
+                            return;
+                        } else {
+                            a / b
+                        }
+                    }
+                    _ => unreachable!(),
+                };
+
+                stack.push(result);
+
+                println!(
+                    "{} {} '{}' {} {} → {}",
+                    format!("Step {}:", step).yellow().bold(),
+                    "Apply".blue(),
+                    token.blue().bold(),
+                    "on".white(),
+                    format!("{} and {}", a.to_string().green(), b.to_string().green()),
+                    format!("Result: {}", result.to_string().magenta().bold())
+                );
+
+                println!(
+                    "  Stack now: [{}]",
+                    stack
+                        .iter()
+                        .map(|x| x.to_string().cyan().to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                );
+
+                step += 1;
             }
-            _ => queue.push(element),
-            // if something other then operators, push here, means numbers
+            num_str => {
+                // Parse the number
+                let number: i128 = match num_str.parse() {
+                    Ok(n) => n,
+                    Err(_) => {
+                        println!("{} '{}'", "❌ Invalid token:".red().bold(), num_str);
+                        return;
+                    }
+                };
+
+                stack.push(number);
+
+                println!(
+                    "{} {} {} → Stack now: [{}]",
+                    format!("Step {}:", step).yellow().bold(),
+                    "Push".blue(),
+                    number.to_string().green().bold(),
+                    stack
+                        .iter()
+                        .map(|x| x.to_string().cyan().to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                );
+
+                step += 1;
+            }
         }
     }
-    // to empty the stack for the operators
-    // if some operator left this line will handle that error.
-    while stack.len() > 0 {
-        queue.push(stack.pop().unwrap());
-    }
 
-    let name = queue.join(" ");
-    (queue, name)
+    // Final result
+    if stack.len() == 1 {
+        println!(
+            "\n{} {}",
+            "✅ Final Result:".cyan().bold(),
+            stack[0].to_string().green().bold()
+        );
+    } else {
+        println!("{}", "❌ Error: Invalid expression".red().bold());
+    }
 }
