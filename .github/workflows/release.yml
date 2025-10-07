@@ -44,7 +44,7 @@ jobs:
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
-          BIN_NAME="calc-rs"
+          BIN_NAME="shuntcalc"
           VERSION="${GITHUB_REF#refs/tags/}"
           ARCHIVE_NAME="${BIN_NAME}-latest-${{ matrix.target }}"
           
@@ -63,7 +63,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          $BIN_NAME = "calc-rs"
+          $BIN_NAME = "shuntcalc"
           $VERSION = $env:GITHUB_REF -replace 'refs/tags/', ''
           $ARCHIVE_NAME = "$BIN_NAME-latest-${{ matrix.target }}"
           
@@ -95,19 +95,19 @@ jobs:
       - name: Create Homebrew Formula
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
-          cat > calc-rs.rb << EOF
+          cat > shuntcalc.rb << EOF
           class CalcRs < Formula
             desc "Expression calculator with tree visualization"
             homepage "https://github.com/${{ github.repository }}"
-            url "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/calc-rs-v${VERSION}-x86_64-apple-darwin.tar.gz"
+            url "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/shuntcalc-v${VERSION}-x86_64-apple-darwin.tar.gz"
             version "${VERSION}"
             
             def install
-              bin.install "calc-rs"
+              bin.install "shuntcalc"
             end
             
             test do
-              system "#{bin}/calc-rs", "--version"
+              system "#{bin}/shuntcalc", "--version"
             end
           end
           EOF
@@ -116,7 +116,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: homebrew-formula
-          path: calc-rs.rb
+          path: shuntcalc.rb
 
   # Create install scripts
   create-install-scripts:
@@ -132,7 +132,7 @@ jobs:
           set -e
           
           REPO="${REPO}"
-          BINARY="calc-rs"
+          BINARY="shuntcalc"
           
           # Detect OS and architecture
           OS=\$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -174,7 +174,7 @@ jobs:
           `$ErrorActionPreference = "Stop"
           
           `$REPO = "$env:REPO"
-          `$BINARY = "calc-rs"
+          `$BINARY = "shuntcalc"
           `$TARGET = "x86_64-pc-windows-msvc"
           
           `$URL = "https://github.com/`$REPO/releases/latest/download/`$BINARY-latest-`$TARGET.zip"
@@ -248,7 +248,7 @@ jobs:
             ### macOS (Homebrew)
             ```bash
             brew tap ${{ github.repository_owner }}/tap
-            brew install calc-rs
+            brew install shuntcalc
             ```
             
             ### Manual Installation
@@ -257,8 +257,8 @@ jobs:
             ---
             
             ## 📦 Downloads
-            - **Linux**: `calc-rs-*-x86_64-unknown-linux-gnu.tar.gz`
-            - **Windows**: `calc-rs-*-x86_64-pc-windows-msvc.zip`
-            - **macOS**: `calc-rs-*-x86_64-apple-darwin.tar.gz`
+            - **Linux**: `shuntcalc-*-x86_64-unknown-linux-gnu.tar.gz`
+            - **Windows**: `shuntcalc-*-x86_64-pc-windows-msvc.zip`
+            - **macOS**: `shuntcalc-*-x86_64-apple-darwin.tar.gz`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
