@@ -122,7 +122,7 @@ jobs:
   create-install-scripts:
     needs: build
     runs-on: ubuntu-latest
-    steps:  
+    steps:
       - name: Create Linux install script
         env:
           REPO: ${{ github.repository }}
