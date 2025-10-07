@@ -46,14 +46,18 @@ jobs:
         run: |
           BIN_NAME="calc-rs"
           VERSION="${GITHUB_REF#refs/tags/}"
-          ARCHIVE_NAME="${BIN_NAME}-${VERSION}-${{ matrix.target }}"
+          ARCHIVE_NAME="${BIN_NAME}-latest-${{ matrix.target }}"
           
           mkdir -p "${ARCHIVE_NAME}"
           cp "target/${{ matrix.target }}/release/${BIN_NAME}" "${ARCHIVE_NAME}/"
-          cp README.md LICENSE "${ARCHIVE_NAME}/" 2>/dev/null || true
+          
+          # Copy optional files if they exist
+          [ -f README.md ] && cp README.md "${ARCHIVE_NAME}/" || true
+          [ -f LICENSE ] && cp LICENSE "${ARCHIVE_NAME}/" || true
           
           tar -czf "${ARCHIVE_NAME}.tar.gz" "${ARCHIVE_NAME}"
           echo "ASSET=${ARCHIVE_NAME}.tar.gz" >> $GITHUB_ENV
+          echo "Created archive: ${ARCHIVE_NAME}.tar.gz"
       
       - name: Create archive (Windows)
         if: matrix.os == 'windows-latest'
@@ -61,15 +65,18 @@ jobs:
         run: |
           $BIN_NAME = "calc-rs"
           $VERSION = $env:GITHUB_REF -replace 'refs/tags/', ''
-          $ARCHIVE_NAME = "$BIN_NAME-$VERSION-${{ matrix.target }}"
+          $ARCHIVE_NAME = "$BIN_NAME-latest-${{ matrix.target }}"
           
-          New-Item -ItemType Directory -Path $ARCHIVE_NAME -Force
+          New-Item -ItemType Directory -Path $ARCHIVE_NAME -Force | Out-Null
           Copy-Item "target/${{ matrix.target }}/release/$BIN_NAME.exe" "$ARCHIVE_NAME/"
-          Copy-Item "README.md" "$ARCHIVE_NAME/" -ErrorAction SilentlyContinue
-          Copy-Item "LICENSE" "$ARCHIVE_NAME/" -ErrorAction SilentlyContinue
           
-          Compress-Archive -Path $ARCHIVE_NAME -DestinationPath "$ARCHIVE_NAME.zip"
+          # Copy optional files if they exist
+          if (Test-Path "README.md") { Copy-Item "README.md" "$ARCHIVE_NAME/" }
+          if (Test-Path "LICENSE") { Copy-Item "LICENSE" "$ARCHIVE_NAME/" }
+          
+          Compress-Archive -Path $ARCHIVE_NAME -DestinationPath "$ARCHIVE_NAME.zip" -Force
           echo "ASSET=$ARCHIVE_NAME.zip" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Created archive: $ARCHIVE_NAME.zip"
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -115,75 +122,87 @@ jobs:
   create-install-scripts:
     needs: build
     runs-on: ubuntu-latest
-    steps:
+    steps:  
       - name: Create Linux install script
+        env:
+          REPO: ${{ github.repository }}
         run: |
-          cat > install.sh << 'EOF'
+          cat > install.sh << EOF
           #!/bin/bash
           set -e
           
-          REPO="${{ github.repository }}"
-          VERSION="${GITHUB_REF#refs/tags/}"
+          REPO="${REPO}"
           BINARY="calc-rs"
           
           # Detect OS and architecture
-          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-          ARCH=$(uname -m)
+          OS=\$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=\$(uname -m)
           
-          if [ "$OS" = "linux" ]; then
+          if [ "\$OS" = "linux" ]; then
             TARGET="x86_64-unknown-linux-gnu"
-          elif [ "$OS" = "darwin" ]; then
+          elif [ "\$OS" = "darwin" ]; then
             TARGET="x86_64-apple-darwin"
           else
-            echo "Unsupported OS: $OS"
+            echo "Unsupported OS: \$OS"
             exit 1
           fi
           
           # Download and install
-          URL="https://github.com/${REPO}/releases/latest/download/${BINARY}-${VERSION}-${TARGET}.tar.gz"
+          echo "Downloading \${BINARY}..."
+          TEMP_DIR=\$(mktemp -d)
+          cd "\$TEMP_DIR"
           
-          echo "Downloading ${BINARY}..."
-          curl -L "$URL" | tar xz
+          curl -sL "https://github.com/\${REPO}/releases/latest/download/\${BINARY}-latest-\${TARGET}.tar.gz" | tar xz
           
           echo "Installing to /usr/local/bin..."
-          sudo mv "${BINARY}-${VERSION}-${TARGET}/${BINARY}" /usr/local/bin/
+          sudo install -m 755 */\${BINARY} /usr/local/bin/
           
-          echo "✓ ${BINARY} installed successfully!"
-          echo "Run '${BINARY}' to start."
+          cd -
+          rm -rf "\$TEMP_DIR"
+          
+          echo "✓ \${BINARY} installed successfully!"
+          echo "Run '\${BINARY}' to start."
           EOF
           chmod +x install.sh
       
       - name: Create Windows install script
+        env:
+          REPO: ${{ github.repository }}
+        shell: pwsh
         run: |
-          cat > install.ps1 << 'EOF'
-          $ErrorActionPreference = "Stop"
+          @'
+          `$ErrorActionPreference = "Stop"
           
-          $REPO = "${{ github.repository }}"
-          $VERSION = $env:GITHUB_REF -replace 'refs/tags/', ''
-          $BINARY = "calc-rs"
-          $TARGET = "x86_64-pc-windows-msvc"
+          `$REPO = "$env:REPO"
+          `$BINARY = "calc-rs"
+          `$TARGET = "x86_64-pc-windows-msvc"
           
-          $URL = "https://github.com/$REPO/releases/latest/download/$BINARY-$VERSION-$TARGET.zip"
-          $INSTALL_DIR = "$env:LOCALAPPDATA\Programs\$BINARY"
+          `$URL = "https://github.com/`$REPO/releases/latest/download/`$BINARY-latest-`$TARGET.zip"
+          `$INSTALL_DIR = "`$env:LOCALAPPDATA\Programs\`$BINARY"
           
-          Write-Host "Downloading $BINARY..."
-          Invoke-WebRequest -Uri $URL -OutFile "$env:TEMP\$BINARY.zip"
+          Write-Host "Downloading `$BINARY..."
+          `$TempZip = "`$env:TEMP\`$BINARY.zip"
+          Invoke-WebRequest -Uri `$URL -OutFile `$TempZip
           
           Write-Host "Installing..."
-          Expand-Archive -Path "$env:TEMP\$BINARY.zip" -DestinationPath $env:TEMP -Force
-          New-Item -ItemType Directory -Path $INSTALL_DIR -Force | Out-Null
-          Copy-Item "$env:TEMP\$BINARY-$VERSION-$TARGET\$BINARY.exe" $INSTALL_DIR -Force
+          `$TempExtract = "`$env:TEMP\`$BINARY-extract"
+          Expand-Archive -Path `$TempZip -DestinationPath `$TempExtract -Force
+          New-Item -ItemType Directory -Path `$INSTALL_DIR -Force | Out-Null
+          Get-ChildItem -Path `$TempExtract -Recurse -Filter "`$BINARY.exe" | Copy-Item -Destination `$INSTALL_DIR -Force
           
           # Add to PATH
-          $PATH = [Environment]::GetEnvironmentVariable("Path", "User")
-          if ($PATH -notlike "*$INSTALL_DIR*") {
-            [Environment]::SetEnvironmentVariable("Path", "$PATH;$INSTALL_DIR", "User")
+          `$PATH = [Environment]::GetEnvironmentVariable("Path", "User")
+          if (`$PATH -notlike "*`$INSTALL_DIR*") {
+            [Environment]::SetEnvironmentVariable("Path", "`$PATH;`$INSTALL_DIR", "User")
             Write-Host "Added to PATH"
           }
           
-          Write-Host "✓ $BINARY installed successfully!"
-          Write-Host "Restart your terminal and run '$BINARY' to start."
-          EOF
+          # Cleanup
+          Remove-Item `$TempZip, `$TempExtract -Recurse -Force -ErrorAction SilentlyContinue
+          
+          Write-Host "✓ `$BINARY installed successfully!"
+          Write-Host "Restart your terminal and run '`$BINARY' to start."
+          '@ | Out-File -FilePath install.ps1 -Encoding utf8
       
       - name: Upload install scripts
         uses: actions/upload-artifact@v4
