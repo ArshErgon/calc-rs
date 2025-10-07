@@ -43,13 +43,13 @@ $ cargo install --path .
 ## 🎮 Usage
 ### One-off calculation 
 ```bash 
-$ calc "(8 - 3) * 5"
+$ shuntcalc "(8 - 3) * 5"
 # Output: 25
 ```
 
 ### Interactive REPL (like Python!) 
 ```bash 
-$ calc
+$ shuntcalc
 ```
 #### Then:
 ```bash
