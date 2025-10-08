@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/shuntcalc?style=flat-square)](https://crates.io/crates/shuntcalc)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
-![shuntcalc demo](demo.gif)
+![shuntcalc demo](./assets/images/shuntcalc.png)
 
 Ever wondered how `(8 - 3) * 5` becomes `25` inside a calculator?  
 **shuntcalc shows you every step** — while supporting variables, error recovery, and an interactive REPL.
@@ -46,6 +46,8 @@ $ cargo install --path .
 $ shuntcalc "(8 - 3) * 5"
 # Output: 25
 ```
+![shuntcalc demo](./assets/images/shuntcalc-shell.png)
+
 
 ### Interactive REPL (like Python!) 
 ```bash 
@@ -64,6 +66,7 @@ Step 5: Apply '*' → Result: 21 → Stack: [21]
 21
 >>> exit
 ```
+![shuntcalc demo](./assets/images/shuntcalc-algo.png)
 
 ### 🛠 How It Works 
 
